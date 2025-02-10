@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="es">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Registro de Empresa</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  </head>
-  <body class="container">
+</head>
+<body class="container">
     <h1>Registro de Empresa</h1>
     <form id="registroForm" class="row g-3">
         <div class="col-md-12">
@@ -38,49 +38,99 @@
             <button class="btn btn-primary" type="submit" id="submitButton" disabled>Registrar Empresa</button>
         </div>
     </form>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/just-validate@4.2.0/dist/just-validate.production.min.js"></script>
     <script>
-      const validation = new JustValidate("#registroForm");
-      const submitButton = document.getElementById("submitButton");
-      
-      validation
-        .addField("#razon_social", [
-          { rule: "required", errorMessage: "Este campo es obligatorio" },
-          { rule: "minLength", value: 3, errorMessage: "Debe tener al menos 3 caracteres" }
-        ])
-        .addField("#rfc", [
-          { rule: "required", errorMessage: "El RFC es obligatorio" },
-          { rule: "customRegexp", value: /^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$/, errorMessage: "Formato de RFC inválido" }
-        ])
-        .addField("#telefono", [
-          { rule: "required", errorMessage: "El teléfono es obligatorio" },
-          { rule: "customRegexp", value: /^[0-9]{10}$/, errorMessage: "Debe contener 10 dígitos numéricos" }
-        ])
-        .addField("#nombre_contacto", [
-          { rule: "required", errorMessage: "Este campo es obligatorio" },
-          { rule: "minLength", value: 3, errorMessage: "Debe tener al menos 3 caracteres" }
-        ])
-        .addField("#correo", [
-          { rule: "required", errorMessage: "El correo es obligatorio" },
-          { rule: "email", errorMessage: "Correo electrónico inválido" }
-        ])
-        .onValidate((isValid) => {
-          submitButton.disabled = !isValid;
+        const validation = new JustValidate("#registroForm", { validateOnInput: true });
+        const submitButton = document.getElementById("submitButton");
+
+        validation
+            .addField("#razon_social", [
+                { rule: "required", errorMessage: "Este campo es obligatorio" },
+                { rule: "minLength", value: 3, errorMessage: "Debe tener al menos 3 caracteres" }
+            ])
+            .addField("#rfc", [
+                { rule: "required", errorMessage: "El RFC es obligatorio" },
+                { rule: "customRegexp", value: /^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$/, errorMessage: "Formato de RFC inválido" }
+            ])
+            .addField("#telefono", [
+                { rule: "required", errorMessage: "El teléfono es obligatorio" },
+                { rule: "customRegexp", value: /^[0-9]{10}$/, errorMessage: "Debe contener 10 dígitos numéricos" }
+            ])
+            .addField("#nombre_contacto", [
+                { rule: "required", errorMessage: "Este campo es obligatorio" },
+                { rule: "minLength", value: 3, errorMessage: "Debe tener al menos 3 caracteres" }
+            ])
+            .addField("#correo", [
+                { rule: "required", errorMessage: "El correo es obligatorio" },
+                { rule: "email", errorMessage: "Correo electrónico inválido" }
+            ])
+            .onValidate((isValid) => {
+                submitButton.disabled = !isValid;
+            });
+
+        const inputs = document.querySelectorAll("#registroForm input");
+
+        inputs.forEach(input => {
+            input.addEventListener("input", () => {
+                validateField(input);
+                validation.revalidateField(`#${input.id}`);
+            });
         });
-      
-      function checkFormValidity() {
-        validation.revalidate().then(isValid => {
-          submitButton.disabled = !isValid;
-        });
-      }
-      
-      document.querySelectorAll("input").forEach(input => {
-        input.addEventListener("input", checkFormValidity);
-        input.addEventListener("blur", checkFormValidity);
-      });
+
+        function validateField(input) {
+            let regex;
+            switch (input.id) {
+                case "razon_social":
+                case "nombre_contacto":
+                    regex = /^.{3,}$/;
+                    break;
+                case "rfc":
+                    regex = /^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$/;
+                    break;
+                case "telefono":
+                    regex = /^\d{10}$/;
+                    break;
+                case "correo":
+                    regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    break;
+                default:
+                    return;
+            }
+
+            if (regex.test(input.value)) {
+                input.classList.remove("is-invalid");
+                input.classList.add("is-valid");
+                document.getElementById(`error${capitalizeFirstLetter(input.id)}`).textContent = "";
+            } else {
+                input.classList.remove("is-valid");
+                input.classList.add("is-invalid");
+                document.getElementById(`error${capitalizeFirstLetter(input.id)}`).textContent = getErrorMessage(input.id);
+            }
+        }
+
+        function getErrorMessage(id) {
+            switch (id) {
+                case "razon_social":
+                    return "Razón social no válida";
+                case "nombre_contacto":
+                    return "Debe tener al menos 3 caracteres";
+                case "rfc":
+                    return "Formato de RFC inválido";
+                case "telefono":
+                    return "Debe contener 10 dígitos numéricos";
+                case "correo":
+                    return "Correo electrónico inválido";
+                default:
+                    return "";
+            }
+        }
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
     </script>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-  </body>
+</body>
 </html>
